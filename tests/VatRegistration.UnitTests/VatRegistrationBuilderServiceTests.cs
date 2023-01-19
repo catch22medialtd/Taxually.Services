@@ -43,7 +43,7 @@ namespace VatRegistration.UnitTests
         public async Task RegisterCompanyForVatNumber_UKCompanyCodeGiven_HttpClientApiIsCalledWithCorrectParams()
         {
             // Arrange
-            const string url = "https://api.uktax.gov.uk";
+            var url = _config.GetValue<string>("AppSettings:UkTaxApiUrl");
             var request = new VatRegistrationRequestModel { CompanyId = "123", CompanyName = "Test", CountryCode = "GB" };
             var mock = new Mock<ITaxuallyHttpClient>();
             var builder = new VatRegistrationBuilderService(mock.Object, It.IsAny<ITaxuallyQueueClient>(), It.IsAny<IFileGenerator>(), _config);
@@ -62,6 +62,7 @@ namespace VatRegistration.UnitTests
             var request = new VatRegistrationRequestModel { CompanyId = "123", CompanyName = "Test", CountryCode = "FR" };
             var mockQueueClient = new Mock<ITaxuallyQueueClient>();
             var mockFileGenerator = new Mock<IFileGenerator>();
+            var filename = _config.GetValue<string>("AppSettings:CsvFilename");
 
             QueueElementDto paramObject = null;
 
@@ -82,7 +83,7 @@ namespace VatRegistration.UnitTests
             // Assert
             mockQueueClient.Verify(m => m.EnqueueAsync(It.IsAny<QueueElementDto>()), Times.Once);
             mockFileGenerator.Verify(m => m.GenerateCsvFile(request.CompanyId, request.CompanyName), Times.Once);
-            Assert.That(paramObject.Filename, Is.EqualTo("vat-registration-csv"));
+            Assert.That(paramObject.Filename, Is.EqualTo(filename));
             Assert.That((paramObject as CsvFileQueueElementDto).Contents, Is.EqualTo(fileContent));
             Assert.That(paramObject, Is.InstanceOf<CsvFileQueueElementDto>());
         }
@@ -94,6 +95,7 @@ namespace VatRegistration.UnitTests
             var request = new VatRegistrationRequestModel { CompanyId = "123", CompanyName = "Test", CountryCode = "DE" };
             var mockQueueClient = new Mock<ITaxuallyQueueClient>();
             var mockFileGenerator = new Mock<IFileGenerator>();
+            var filename = _config.GetValue<string>("AppSettings:XmlFilename");
 
             QueueElementDto paramObject = null;
 
@@ -115,7 +117,7 @@ namespace VatRegistration.UnitTests
             // Assert
             mockQueueClient.Verify(m => m.EnqueueAsync(It.IsAny<QueueElementDto>()), Times.Once);
             mockFileGenerator.Verify(m => m.GenerateXmlFile(request.CompanyId, request.CompanyName), Times.Once);
-            Assert.That(paramObject.Filename, Is.EqualTo("vat-registration-xml"));
+            Assert.That(paramObject.Filename, Is.EqualTo(filename));
             Assert.That((paramObject as XmlFileQueueElementDto).Contents, Is.EqualTo(fileContent));
             Assert.That(paramObject, Is.InstanceOf<XmlFileQueueElementDto>());
         }
